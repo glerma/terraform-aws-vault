@@ -93,7 +93,7 @@ resource "aws_key_pair" "generated_key" {
   public_key = "${tls_private_key.ssh.public_key_openssh}"
 }
 
-resource "aws_ssm_parameter" "vault_ssh_keys" {
+resource "aws_ssm_parameter" "ssh_keys" {
   name  = "/${var.environment}/vault-ssh-private-key"
   description = "SSH Private Key for Vault Cluster: ${var.cluster_name}"
   type  = "SecureString"
@@ -124,7 +124,7 @@ resource "aws_launch_configuration" "launch_configuration" {
 
 
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
-  key_name             = var.ssh_key_name
+  key_name             = aws_key_pair.generated_key.key_name
   # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
   # force an interpolation expression to be interpreted as a list by wrapping it
   # in an extra set of list brackets. That form was supported for compatibilty in
