@@ -6,6 +6,8 @@ terraform {
   required_version = ">= 0.12"
 }
 
+data "aws_region" "current" {}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE AN AUTO SCALING GROUP (ASG) TO RUN VAULT
 # ---------------------------------------------------------------------------------------------------------------------
@@ -107,7 +109,7 @@ data "template_file" "user_data_vault_cluster" {
   template = file("${path.module}/user-data-vault.sh")
 
   vars = {
-    aws_region               = var.region 
+    aws_region               = data.aws_region.current
     consul_cluster_tag_key   = var.consul_cluster_tag_key
     consul_cluster_tag_value = var.consul_cluster_name
   }
@@ -119,7 +121,7 @@ resource "aws_launch_configuration" "launch_configuration" {
   image_id      = var.ami_id
   instance_type = var.instance_type
   user_data     = data.template_file.user_data_vault_cluster.rendered
-  
+
 
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
   key_name             = var.ssh_key_name
