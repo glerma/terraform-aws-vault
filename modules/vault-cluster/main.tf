@@ -118,7 +118,8 @@ resource "aws_launch_configuration" "launch_configuration" {
   name_prefix   = "${var.cluster_name}-"
   image_id      = var.ami_id
   instance_type = var.instance_type
-  user_data     = var.user_data
+  user_data     = data.template_file.user_data_vault_cluster.rendered
+  
 
   iam_instance_profile = aws_iam_instance_profile.instance_profile.name
   key_name             = var.ssh_key_name
