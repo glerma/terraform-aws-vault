@@ -77,9 +77,42 @@ resource "aws_autoscaling_group" "autoscaling_group" {
   }
 }
 
+
+#######################################################
+# Generate an SSH key pair for the vault cluster nodes.
+#######################################################
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "generated_key" {
+  key_name   = var.ssh_key_name
+  public_key = "${tls_private_key.ssh.public_key_openssh}"
+}
+
+resource "aws_ssm_parameter" "vault_ssh_keys" {
+  name  = "/${var.environment}/vault-ssh-private-key"
+  description = "SSH Private Key for Vault Cluster: ${var.vault_cluster_name}"
+  type  = "SecureString"
+  value = "${tls_private_key.ssh.private_key_pem}"
+}
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE LAUNCH CONFIGURATION TO DEFINE WHAT RUNS ON EACH INSTANCE IN THE ASG
 # ---------------------------------------------------------------------------------------------------------------------
+
+data "template_file" "user_data_vault_cluster" {
+  template = file("${path.module}/user-data-vault.sh")
+
+  vars = {
+    aws_region               = var.region 
+    consul_cluster_tag_key   = var.consul_cluster_tag_key
+    consul_cluster_tag_value = var.consul_cluster_name
+  }
+  
+}
 
 resource "aws_launch_configuration" "launch_configuration" {
   name_prefix   = "${var.cluster_name}-"
@@ -329,4 +362,3 @@ resource "aws_iam_role_policy" "vault_auto_unseal_kms" {
     create_before_destroy = true
   }
 }
-
