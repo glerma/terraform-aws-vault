@@ -90,14 +90,14 @@ resource "tls_private_key" "ssh" {
 
 resource "aws_key_pair" "generated_key" {
   key_name   = var.ssh_key_name
-  public_key = "${tls_private_key.ssh.public_key_openssh}"
+  public_key = tls_private_key.ssh.public_key_openssh
 }
 
 resource "aws_ssm_parameter" "ssh_keys" {
   name  = "/${var.environment}/vault-ssh-private-key"
   description = "SSH Private Key for Vault Cluster: ${var.cluster_name}"
   type  = "SecureString"
-  value = "${tls_private_key.ssh.private_key_pem}"
+  value = tls_private_key.ssh.private_key_pem
 }
 
 
